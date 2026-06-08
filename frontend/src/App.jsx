@@ -136,6 +136,26 @@ function FlagGrid({ flags }) {
             {keys.map((k) => {
               const f = flags?.[k];
               const triggered = f?.triggered;
+
+              const ACADEMIC_TOOLTIPS = {
+                rs1:  "Divergent movements of revenue and net profit suggest recognition or expense-timing anomalies.",
+                rs2:  "Atypical sales–COGS divergence may indicate cost classification or revenue recognition inconsistencies.",
+                rs3:  "Opposing sales and operating-expense trends can reflect discretionary expense timing or misclassification.",
+                rs4:  "Receivables growing out of line with sales suggests credit extension or revenue recognition concerns.",
+                rs5:  "Sales and fixed-asset changes moving inversely may indicate capitalization policy shifts or one‑off disposals.",
+                rs6:  "An elevated sales-to-profit ratio relative to history can imply transitory or non‑operating profit components.",
+                rs7:  "A spike in sales/COGS ratio versus prior periods can reflect inventory/cost smoothing or margin manipulation.",
+                rs8:  "Sales/OpEx ratio at historical highs may indicate cost deferral or reclassification to inflate margins.",
+                rs9:  "A sustained decline in receivables velocity versus sales signals potential collectability or channel-stuffing issues.",
+                rs10: "Unusually high sales per fixed asset suggests aggressive revenue recognition or temporary capacity utilisation." ,
+                rs11: "Inventory concentration within current assets may signal write‑downs risk or valuation subjectivity.",
+                rs12: "Receivables concentration indicates exposure to a few large debtors and attendant recognition risk.",
+                rs13: "A large divergence between gross and operating margins can reflect non‑recurring below‑the‑line items.",
+                rs14: "Disproportionate other income relative to sales suggests earnings reliance on non‑operating sources.",
+                es1:  "Concurrent declines in DSI and sales may indicate inventory timing manipulation to smooth earnings.",
+                cs1:  "Rising net income relative to operating cash flow suggests earnings not backed by underlying cash generation.",
+              };
+
               return (
                 <Tooltip
                   key={k}
@@ -143,8 +163,8 @@ function FlagGrid({ flags }) {
                     <div className="tooltip-flag-content">
                       <div className="tooltip-flag-key">{k.toUpperCase()}</div>
                       <div className="tooltip-flag-label">{FLAG_LABELS[k]}</div>
-                      <div className="tooltip-flag-desc">{f?.description}</div>
-                      <div className={`tooltip-flag-status ${triggered ? "triggered" : "clear"}`}>
+                      <div className="tooltip-flag-desc">{ACADEMIC_TOOLTIPS[k]}</div>
+                      <div style={{ marginTop: 8 }} className={`tooltip-flag-status ${triggered ? "triggered" : "clear"}`}>
                         {triggered ? "⚑ TRIGGERED" : "✓ Clear"}
                       </div>
                     </div>
@@ -233,15 +253,7 @@ function HoldingRow({ h, rank }) {
                 <span>Flag Analysis — {h.fin_name} (FY{h.year})</span>
                 <span className="triggered-count">{triggeredFlags} of 16 triggered</span>
               </div>
-              <FlagGrid flags={h.flags} />
-              {Object.keys(h.metrics || {}).length > 0 && (
-                <div className="metrics-row">
-                  {h.metrics.gpm   != null && <div className="metric-pill"><span>GPM</span>{fmtPct(h.metrics.gpm * 100)}</div>}
-                  {h.metrics.opm   != null && <div className="metric-pill"><span>OPM</span>{fmtPct(h.metrics.opm * 100)}</div>}
-                  {h.metrics.dsi   != null && <div className="metric-pill"><span>DSI</span>{fmt(h.metrics.dsi, 0)} days</div>}
-                  {h.metrics.ni_cfo!= null && <div className="metric-pill"><span>NI/CFO</span>{fmt(h.metrics.ni_cfo, 2)}×</div>}
-                </div>
-              )}
+              <FlagGrid flags={h.flags} metrics={h.metrics} />
             </div>
           </td>
         </tr>
@@ -284,6 +296,7 @@ function ExplanationPanel({ scheme, detail }) {
           typology:          detail.score.typology,
           total_holdings:    detail.score.total_holdings,
           matched_holdings:  detail.score.matched_holdings,
+          matched_companies: detail.matched.length,
           coverage_pct:      detail.score.coverage_pct,
           top_holdings:      top,
           triggered_flags:   [...triggered],
