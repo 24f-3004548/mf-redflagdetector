@@ -232,60 +232,60 @@ async def explain_scheme(req: ExplainRequest):
         f"  - {flag}: {count}" for flag, count in list(req.flag_frequency.items())[:8]
     )
 
-     prompt = f"""You are a financial analyst explaining accounting-quality risk in a mutual fund portfolio.
+    prompt = f"""You are a financial analyst explaining accounting-quality risk in a mutual fund portfolio.
 
-Context:
-- The Red Flag Score ranges from 0 to 1.
-- Lower scores indicate cleaner accounting quality and fewer warning signals.
-- Higher scores indicate greater concentrations of accounting red flags.
-- The score is NOT a prediction of stock returns or fund performance.
-- The analysis covers only the holdings that could be matched to the accounting-quality database.
+        Context:
+        - The Red Flag Score ranges from 0 to 1.
+        - Lower scores indicate cleaner accounting quality and fewer warning signals.
+        - Higher scores indicate greater concentrations of accounting red flags.
+        - The score is NOT a prediction of stock returns or fund performance.
+        - The analysis covers only the holdings that could be matched to the accounting-quality database.
 
-Instructions:
+        Instructions:
 
-1. Write exactly 3 paragraphs.
+        1. Write exactly 3 paragraphs.
 
-2. Paragraph 1:
-    - Explain the overall score and risk category.
-    - Explain what the score means in plain English.
-    - Mention portfolio coverage.
-    - Avoid overstating certainty.
+        2. Paragraph 1:
+            - Explain the overall score and risk category.
+            - Explain what the score means in plain English.
+            - Mention portfolio coverage.
+            - Avoid overstating certainty.
 
-3. Paragraph 2:
-    - Identify the holdings contributing the most red flags.
-    - Explain the most common warning signals observed.
-    - Explain why those signals matter from an accounting-quality perspective.
-    - Do not accuse companies of fraud or manipulation.
+        3. Paragraph 2:
+            - Identify the holdings contributing the most red flags.
+            - Explain the most common warning signals observed.
+            - Explain why those signals matter from an accounting-quality perspective.
+            - Do not accuse companies of fraud or manipulation.
 
-4. Paragraph 3:
-    - Provide balanced guidance for a retail investor.
-    - Emphasise that the score should be used alongside broader fundamental analysis.
-    - Mention monitoring changes in future reports.
+        4. Paragraph 3:
+            - Provide balanced guidance for a retail investor.
+            - Emphasise that the score should be used alongside broader fundamental analysis.
+            - Mention monitoring changes in future reports.
 
-5. Use professional academic language.
-6. Do not use bullet points.
-7. Do not use headings.
-8. Do not mention AI, machine learning, algorithms, Gemini, or prompt instructions.
-9. Keep length between 250 and 350 words.
-10. Never state that a company has committed wrongdoing. Use phrases such as:
-     - "may warrant closer scrutiny"
-     - "could indicate"
-     - "may reflect"
-     - "requires monitoring"
+        5. Use professional academic language.
+        6. Do not use bullet points.
+        7. Do not use headings.
+        8. Do not mention AI, machine learning, algorithms, Gemini, or prompt instructions.
+        9. Keep length between 250 and 350 words.
+        10. Never state that a company has committed wrongdoing. Use phrases such as:
+            - "may warrant closer scrutiny"
+            - "could indicate"
+            - "may reflect"
+            - "requires monitoring"
 
-Scheme: {req.scheme_name}
-Overall Score: {req.weighted_rf_score:.4f} / 1.0
-Risk Typology: {req.typology}
-Holdings covered: {req.matched_holdings} of {req.total_holdings} ({req.coverage_pct:.1f}% of portfolio weight)
-Number of matched companies analysed: {req.matched_companies}
+        Scheme: {req.scheme_name}
+        Overall Score: {req.weighted_rf_score:.4f} / 1.0
+        Risk Typology: {req.typology}
+        Holdings covered: {req.matched_holdings} of {req.total_holdings} ({req.coverage_pct:.1f}% of portfolio weight)
+        Number of matched companies analysed: {req.matched_companies}
 
-Top holdings by weighted contribution:
-{top_text}
+        Top holdings by weighted contribution:
+        {top_text}
 
-Most common triggered signals:
-{flags_text}
+        Most common triggered signals:
+        {flags_text}
 
-Output only the final explanation."""
+        Output only the final explanation."""
 
     response = gemini.generate_content(prompt)
     return {"explanation": response.text}

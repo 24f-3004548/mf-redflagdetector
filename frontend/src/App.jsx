@@ -271,6 +271,10 @@ function ExplanationPanel({ scheme, detail }) {
     setLoading(true);
     setText("");
     try {
+      if (!detail || !detail.score) {
+        setText("No detailed scheme data available to generate explanation.");
+        return;
+      }
       const top = [...detail.matched]
         .sort((a, b) => (b.weighted_contribution ?? 0) - (a.weighted_contribution ?? 0))
         .slice(0, 10)
@@ -297,20 +301,24 @@ function ExplanationPanel({ scheme, detail }) {
         [...triggered.entries()].sort((a, b) => b[1] - a[1])
       );
 
+      const payload = {
+        scheme_name:       scheme?.scheme_name || "",
+        weighted_rf_score: Number(detail.score.weighted_rf_score ?? 0),
+        typology:          detail.score.typology || "Unrated",
+        total_holdings:    Number(detail.score.total_holdings ?? 0),
+        matched_holdings:  Number(detail.score.matched_holdings ?? 0),
+        matched_companies: Number(detail.matched?.length ?? 0),
+        coverage_pct:      Number(detail.score.coverage_pct ?? 0),
+        top_holdings:      top || [],
+        flag_frequency:    flag_frequency || {},
+      };
+
+      console.debug("/api/explain payload", payload);
+
       const res = await fetch(`${API_BASE}/api/explain`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scheme_name:       scheme.scheme_name,
-          weighted_rf_score: detail.score.weighted_rf_score,
-          typology:          detail.score.typology,
-          total_holdings:    detail.score.total_holdings,
-          matched_holdings:  detail.score.matched_holdings,
-          matched_companies: detail.matched.length,
-          coverage_pct:      detail.score.coverage_pct,
-          top_holdings:      top,
-          flag_frequency,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
