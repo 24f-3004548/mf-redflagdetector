@@ -312,7 +312,30 @@ function ExplanationPanel({ scheme, detail }) {
           flag_frequency,
         }),
       });
-      const data = await res.json();
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        console.error("/api/explain returned error", res.status, res.statusText, body);
+        setText(`Failed to generate explanation: ${res.status} ${res.statusText}`);
+        return;
+      }
+
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (err) {
+        console.error("Failed to parse /api/explain JSON", err);
+        const txt = await res.text().catch(() => "");
+        setText(`Invalid response from server: ${txt || res.statusText}`);
+        return;
+      }
+
+      if (!data || !data.explanation) {
+        console.error("/api/explain returned no explanation", data);
+        setText("No explanation returned from server.");
+        return;
+      }
+
       setText(data.explanation);
       setLoaded(true);
     } catch (e) {
