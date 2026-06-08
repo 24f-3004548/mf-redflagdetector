@@ -285,7 +285,7 @@ async def explain_scheme(req: ExplainRequest):
         Most common triggered signals:
         {flags_text}
 
-        Output only the final explanation."""
+        Output only the final explanation AND ANSWER WITHIN 250 WORDS. DO NOT EXPLAIN YOUR REASONING OR SHOW YOUR CALCULATIONS."""
 
     response = gemini.generate_content(prompt)
     return {"explanation": response.text}
