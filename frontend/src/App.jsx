@@ -432,9 +432,6 @@ export default function App() {
                 <div className="logo-sub">Mutual Fund Accounting Quality Analyser</div>
               </div>
             </div>
-            <div className="header-meta">
-              Based on Schilit's Financial Shenanigans Framework · {schemes.length} Schemes
-            </div>
           </div>
         </header>
 
