@@ -2,7 +2,7 @@
 
 A full‑stack web application that detects accounting-quality red flags in Indian mutual fund schemes using a 16-flag heuristic inspired by Howard Schilit's Financial Shenanigans.
 
-Live demo: https://mfredflagdetector.vercel.app/
+Live deployment: https://mfredflagdetector.vercel.app/
 
 ---
 
