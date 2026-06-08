@@ -1,10 +1,3 @@
-"""
-backend/main.py  —  FastAPI backend for MF Red Flag Detector
-Deploy to Vercel via vercel.json serverless config, or run locally with uvicorn.
-
-pip install fastapi uvicorn supabase python-dotenv google-generativeai
-"""
-
 import os
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Query
@@ -225,40 +218,74 @@ class ExplainRequest(BaseModel):
     matched_companies: int
     coverage_pct: float
     top_holdings: list   # [{fin_name, weight_pct, total_red_flags, normalised_score}]
-    triggered_flags: list  # unique flag descriptions triggered across top holdings
+    flag_frequency: dict[str, int]  # {"flag description": count}
 
 
 @app.post("/api/explain")
 async def explain_scheme(req: ExplainRequest):
     """Generate a Gemini-powered natural language explanation of the scheme's risk profile."""
     top_text = "\n".join(
-        f"  - {h['fin_name']} ({h['weight_pct']:.2f}% weight, {h['total_red_flags']} red flags)"
+        f"  - {h['fin_name']} ({h['weight_pct']:.2f}% weight, {h['total_red_flags']} red flags, {h.get('weighted_contribution', 0):.4f} weighted contribution)"
         for h in req.top_holdings[:10]
     )
-    flags_text = "\n".join(f"  • {f}" for f in req.triggered_flags[:8])
+    flags_text = "\n".join(
+        f"  - {flag}: {count}" for flag, count in list(req.flag_frequency.items())[:8]
+    )
 
-    prompt = f"""You are a financial analyst assistant specialising in Indian mutual funds and accounting quality.
+     prompt = f"""You are a financial analyst explaining accounting-quality risk in a mutual fund portfolio.
 
-A mutual fund scheme has been analysed using a red flag detection model based on Howard Schilit's "Financial Shenanigans" framework. The model checks 16 signals across revenue quality, earnings quality, and cash flow quality for each holding.
+Context:
+- The Red Flag Score ranges from 0 to 1.
+- Lower scores indicate cleaner accounting quality and fewer warning signals.
+- Higher scores indicate greater concentrations of accounting red flags.
+- The score is NOT a prediction of stock returns or fund performance.
+- The analysis covers only the holdings that could be matched to the accounting-quality database.
+
+Instructions:
+
+1. Write exactly 3 paragraphs.
+
+2. Paragraph 1:
+    - Explain the overall score and risk category.
+    - Explain what the score means in plain English.
+    - Mention portfolio coverage.
+    - Avoid overstating certainty.
+
+3. Paragraph 2:
+    - Identify the holdings contributing the most red flags.
+    - Explain the most common warning signals observed.
+    - Explain why those signals matter from an accounting-quality perspective.
+    - Do not accuse companies of fraud or manipulation.
+
+4. Paragraph 3:
+    - Provide balanced guidance for a retail investor.
+    - Emphasise that the score should be used alongside broader fundamental analysis.
+    - Mention monitoring changes in future reports.
+
+5. Use professional academic language.
+6. Do not use bullet points.
+7. Do not use headings.
+8. Do not mention AI, machine learning, algorithms, Gemini, or prompt instructions.
+9. Keep length between 250 and 350 words.
+10. Never state that a company has committed wrongdoing. Use phrases such as:
+     - "may warrant closer scrutiny"
+     - "could indicate"
+     - "may reflect"
+     - "requires monitoring"
 
 Scheme: {req.scheme_name}
-Overall Score: {req.weighted_rf_score:.4f} / 1.0  (0 = cleanest, 1 = most flags)
+Overall Score: {req.weighted_rf_score:.4f} / 1.0
 Risk Typology: {req.typology}
 Holdings covered: {req.matched_holdings} of {req.total_holdings} ({req.coverage_pct:.1f}% of portfolio weight)
 Number of matched companies analysed: {req.matched_companies}
 
-Top holdings by weight (with flag count):
+Top holdings by weighted contribution:
 {top_text}
 
-Most common red flag signals triggered across holdings:
+Most common triggered signals:
 {flags_text}
 
-Write a clear, concise 3-paragraph explanation (no bullet points, no headers) for a retail investor:
-1. What the score means overall and what the typology implies
-2. Which holdings are driving the risk and what patterns the flags reveal
-3. What a prudent investor should watch for or do next
-
-Keep the language accessible but precise. Do not make investment recommendations. Do not use markdown formatting."""
+Output only the final explanation."""
 
     response = gemini.generate_content(prompt)
     return {"explanation": response.text}

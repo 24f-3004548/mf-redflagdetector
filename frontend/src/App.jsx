@@ -271,21 +271,31 @@ function ExplanationPanel({ scheme, detail }) {
     setLoading(true);
     setText("");
     try {
-      const top = detail.matched.slice(0, 10).map((h) => ({
-        fin_name:        h.fin_name,
-        weight_pct:      h.weight_pct,
-        total_red_flags: h.total_red_flags,
-        normalised_score: h.normalised_score,
-      }));
+      const top = [...detail.matched]
+        .sort((a, b) => (b.weighted_contribution ?? 0) - (a.weighted_contribution ?? 0))
+        .slice(0, 10)
+        .map((h) => ({
+          fin_name: h.fin_name,
+          weight_pct: h.weight_pct,
+          total_red_flags: h.total_red_flags,
+          normalised_score: h.normalised_score,
+          weighted_contribution: h.weighted_contribution,
+        }));
 
-      const triggered = new Set();
+      const triggered = new Map();
       detail.matched.forEach((h) => {
         if (h.flags) {
           Object.entries(h.flags).forEach(([, v]) => {
-            if (v.triggered) triggered.add(v.description);
+            if (v.triggered) {
+              triggered.set(v.description, (triggered.get(v.description) || 0) + 1);
+            }
           });
         }
       });
+
+      const flag_frequency = Object.fromEntries(
+        [...triggered.entries()].sort((a, b) => b[1] - a[1])
+      );
 
       const res = await fetch(`${API_BASE}/api/explain`, {
         method: "POST",
@@ -299,7 +309,7 @@ function ExplanationPanel({ scheme, detail }) {
           matched_companies: detail.matched.length,
           coverage_pct:      detail.score.coverage_pct,
           top_holdings:      top,
-          triggered_flags:   [...triggered],
+          flag_frequency,
         }),
       });
       const data = await res.json();
