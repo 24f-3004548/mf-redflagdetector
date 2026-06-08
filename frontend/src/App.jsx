@@ -493,21 +493,8 @@ export default function App() {
                 <h2>Select a Mutual Fund Scheme</h2>
                 <p>
                   Choose a scheme from the left panel to see its red flag score,
-                  constituent breakdown, and AI-generated risk narrative.
+                  constituent breakdown and an AI-generated risk narrative.
                 </p>
-                <div className="legend-grid">
-                  {Object.entries(TYPOLOGY_CONFIG).filter(([k]) => k !== "Unrated").map(([t, cfg]) => (
-                    <div key={t} className="legend-item" style={{ borderColor: cfg.border, background: cfg.bg }}>
-                      <div className="legend-dot" style={{ background: cfg.color }} />
-                      <div>
-                        <div className="legend-name" style={{ color: cfg.color }}>{t}</div>
-                        <div className="legend-range">
-                          {t === "Low Risk" ? "Score < 0.20" : t === "Moderate Risk" ? "0.20 – 0.35" : t === "Elevated Risk" ? "0.35 – 0.50" : "> 0.50"}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 
